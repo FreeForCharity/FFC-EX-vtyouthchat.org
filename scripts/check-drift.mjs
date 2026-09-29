@@ -29,7 +29,7 @@ const warnings = []
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const APP_RESERVED = new Set(['api', '_components', '_lib'])
 const PLACEHOLDER_HOST = 'ffcworkingsite1.org'
-const GITHUB_PAGES_PROJECT_PATH = '/FFC-IN-Footer_Only_Template'
+const GITHUB_PAGES_PROJECT_PATH = '/FFC-EX-vtyouthchat.org'
 const SECURITY_TXT_RFC3339 =
   /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/
 
@@ -538,17 +538,22 @@ async function checkSecurityTxtSync(siteConfig) {
 
   if (!siteConfig?.url) return
   const origin = siteConfig.url.replace(/\/$/, '')
+
+  // One deploy serves ONE origin+prefix. This used to require both the apex
+  // and the project-path variant of every line, which is only satisfiable by
+  // gluing them together: with no CNAME that produced lines such as
+  // `https://<owner>.github.io/security.txt`, an address this site does not
+  // serve. RFC 9116 treats a Canonical URI as the address the file is meant to
+  // be fetched from, so listing an unreachable one is worse than listing none.
+  // (Ported from FFC-IN-Footer_Only_Template scripts/check-drift.mjs.)
+  const prefix = await deployPathPrefix()
   const expectedLines = [
     siteConfig.contactEmail ? `Contact: mailto:${siteConfig.contactEmail}` : null,
     'Preferred-Languages: en',
-    `Canonical: ${origin}/.well-known/security.txt`,
-    `Canonical: ${origin}/security.txt`,
-    `Canonical: ${origin}${GITHUB_PAGES_PROJECT_PATH}/.well-known/security.txt`,
-    `Canonical: ${origin}${GITHUB_PAGES_PROJECT_PATH}/security.txt`,
-    `Policy: ${origin}${siteConfig.vulnerabilityDisclosurePath}`,
-    `Policy: ${origin}${GITHUB_PAGES_PROJECT_PATH}${siteConfig.vulnerabilityDisclosurePath}`,
-    `Acknowledgments: ${origin}/security-acknowledgements`,
-    `Acknowledgments: ${origin}${GITHUB_PAGES_PROJECT_PATH}/security-acknowledgements`,
+    `Canonical: ${origin}${prefix}/.well-known/security.txt`,
+    `Canonical: ${origin}${prefix}/security.txt`,
+    `Policy: ${origin}${prefix}${siteConfig.vulnerabilityDisclosurePath}`,
+    `Acknowledgments: ${origin}${prefix}/security-acknowledgements`,
   ].filter(Boolean)
 
   for (const line of expectedLines) {
@@ -557,6 +562,32 @@ async function checkSecurityTxtSync(siteConfig) {
       `public/.well-known/security.txt is not aligned with src/lib/site.config.ts. Missing: ${line}`
     )
   }
+
+  // A leftover line from a previous origin or deploy mode still parses and
+  // still looks authoritative. Warn rather than error: a site mid-cutover may
+  // deliberately carry both while DNS propagates.
+  const expected = new Set(expectedLines)
+  for (const line of wellKnownPayload.split('\n')) {
+    const trimmed = line.trim()
+    if (!/^(Canonical|Policy|Acknowledgments):/.test(trimmed)) continue
+    if (expected.has(trimmed)) continue
+    warnings.push(
+      `public/.well-known/security.txt lists "${trimmed}", which this deploy does not serve ` +
+        `(it serves ${origin}${prefix}/). Remove it once the cutover it belongs to is finished.`
+    )
+  }
+}
+
+/**
+ * The URL prefix this deploy is served under.
+ *
+ * `.github/workflows/deploy.yml` sets NEXT_PUBLIC_BASE_PATH from exactly one
+ * signal: a non-empty `public/CNAME` means a custom domain (no base path),
+ * and its absence means the GitHub Pages project path.
+ */
+async function deployPathPrefix() {
+  const cname = (await readIfExists(join(PUBLIC_DIR, 'CNAME')))?.trim()
+  return cname ? '' : GITHUB_PAGES_PROJECT_PATH
 }
 
 const siteConfig = await readSiteConfig()

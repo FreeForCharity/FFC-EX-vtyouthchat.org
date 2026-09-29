@@ -5,11 +5,10 @@
 // member's card links to it. There are no photos: cards render an initials
 // monogram, so a forking charity never has to source or host portrait images.
 
-import clarkeMoyer from './team/clarke-moyer.json'
-import chrisRae from './team/chris-rae.json'
-import tylerCarlotto from './team/tyler-carlotto.json'
-import brennanDarling from './team/brennan-darling.json'
-import rebeccaCook from './team/rebecca-cook.json'
+import member1 from './team/tammy-wark.json'
+import member2 from './team/grace-bushspics.json'
+import member3 from './team/joann-jarvis.json'
+import member4 from './team/doug-relyea.json'
 
 export type TeamMember = {
   /** Full name; the first + last initials seed the avatar monogram. */
@@ -24,10 +23,4 @@ export type TeamMember = {
   linkedinUrl?: string
 }
 
-export const team: TeamMember[] = [
-  clarkeMoyer,
-  chrisRae,
-  tylerCarlotto,
-  brennanDarling,
-  rebeccaCook,
-]
+export const team: TeamMember[] = [member1, member2, member3, member4]
