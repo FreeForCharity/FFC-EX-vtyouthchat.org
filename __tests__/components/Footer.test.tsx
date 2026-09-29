@@ -78,6 +78,25 @@ describe('Footer component', () => {
     expect(screen.getByText(new RegExp(siteConfig.ein))).toBeInTheDocument()
   })
 
+  // An organization with no EIN (e.g. a non-US charity) gets no bare "EIN:"
+  // line; a pending EIN keeps the line, with the placeholder in place of it.
+  it('renders the EIN line only with an EIN or while it is pending', () => {
+    const original = { ein: siteConfig.ein, pending: siteConfig.pending }
+    try {
+      siteConfig.ein = ''
+      siteConfig.pending = (original.pending ?? []).filter((f) => f !== 'ein')
+      const { unmount } = render(<Footer />)
+      expect(screen.queryByText(/EIN:/)).toBeNull()
+      unmount()
+
+      siteConfig.pending = [...(siteConfig.pending ?? []), 'ein']
+      render(<Footer />)
+      expect(screen.getByText(/EIN:/)).toBeInTheDocument()
+    } finally {
+      Object.assign(siteConfig, original)
+    }
+  })
+
   // A charity with no published phone number must render NO phone block at all.
   // The alternative the template used to allow — a placeholder in the config —
   // ships a `tel:` link that dials nothing, which is worse than an absent one

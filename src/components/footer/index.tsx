@@ -97,12 +97,17 @@ const Footer: React.FC = () => {
               </Link>
             )}
 
-            <p>
-              <span className="font-[500] text-[22px]">
-                {siteConfig.name} EIN: {isPending('ein') ? null : siteConfig.ein}
-              </span>
-              {isPending('ein') && <PendingNote />}
-            </p>
+            {/* No bare "EIN:" line: shown with the EIN, or with the placeholder
+              while it is pending, and dropped for an organization that has
+              none (e.g. a non-US charity). */}
+            {(siteConfig.ein.trim() || isPending('ein')) && (
+              <p>
+                <span className="font-[500] text-[22px]">
+                  {siteConfig.name} EIN: {isPending('ein') ? null : siteConfig.ein}
+                </span>
+                {isPending('ein') && <PendingNote />}
+              </p>
+            )}
           </div>
         </div>
 
