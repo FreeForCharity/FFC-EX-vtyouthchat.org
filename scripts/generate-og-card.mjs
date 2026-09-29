@@ -5,7 +5,7 @@
  * Run after changing name, tagline, shortDescription or themeColor in
  * site.config.ts:
  *
- *   pnpm run og:card
+ *   node scripts/generate-og-card.mjs
  *
  * WHY A COMMITTED PNG AND NOT `src/app/opengraph-image.tsx`
  * --------------------------------------------------------

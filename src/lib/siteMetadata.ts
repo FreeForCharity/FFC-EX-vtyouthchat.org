@@ -5,7 +5,7 @@ import { cardDescription, siteConfig, siteUrl, twitterSite } from '@/lib/site.co
 const defaultTitle = `${siteConfig.name} | ${siteConfig.tagline}`
 
 /**
- * The social card. Regenerate with `pnpm run og:card` after any change to
+ * The social card. Regenerate with `node scripts/generate-og-card.mjs` after any change to
  * name, tagline, shortDescription or themeColor.
  *
  * This used to be `/web-app-manifest-512x512.png` -- a 512x512 square
